@@ -46,6 +46,7 @@
 # include "keyboardconfig.h"
 static uint8_t g_key_map[KEYSCAN_MAX_ROW][KEYSCAN_MAX_COL] = KEYSCAN_MAP;
 #else
+#error "Please define CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE"
 static uint8_t g_key_map[KEYSCAN_MAX_ROW][KEYSCAN_MAX_COL]  = {
     { 0x04, 0x05 },
     { 0x06, 0x07 },
