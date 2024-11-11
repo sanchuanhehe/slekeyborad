@@ -29,16 +29,24 @@
 #define KEYSCAN_BASE_ADDR 0x5208D000
 #define M_CTL_BASE_ADDR 0x520004A0
 
-uintptr_t g_keyscan_base_addr =  (uintptr_t)KEYSCAN_BASE_ADDR;
-uintptr_t g_keyscan_m_ctl_base_addr =  (uintptr_t)M_CTL_BASE_ADDR;
-keyscan_keys_type_t g_keyboard_type_sel = FULL_KEYS_TYPE;
+#define KEYSCAN_ROW_NUM 12                                      // TODO:CUSTOME KEYS
+#define KEYSCAN_COL_NUM 7                                       // TODO:CUSTOME KEYS
+#define KEYSCAN_MAX_KEY_NUM (KEYSCAN_ROW_NUM + KEYSCAN_MAX_COL) // TODO:CUSTOME KEYS
+#define KEYSCAN_USED_NUM (KEYSCAN_ROW_NUM + KEYSCAN_COL_NUM)    // TODO:CUSTOME KEYS
+#define KEYSCAN_PIN_SEL_COL_BASE_ADDR 0x52000910
+#define KEYSCAN_PIN_SEL_ROW_BASE_ADDR 0x52000920
 
-uint32_t g_gpio_map[KEYSCAN_GPIO_NUM] = {2, 3, 4, 5, 6, 21, 9, 29, 31, 24, 14, 23, 27,
-                                         28, 10, 11, 30, 13, 15, 16, 25, 26, 12, 22};
+uintptr_t g_keyscan_base_addr = (uintptr_t)KEYSCAN_BASE_ADDR;
+uintptr_t g_keyscan_m_ctl_base_addr = (uintptr_t)M_CTL_BASE_ADDR;
+keyscan_keys_type_t g_keyboard_type_sel = CUSTOME_KEYS_TYPE;
+
+uint32_t g_gpio_map[KEYSCAN_GPIO_NUM] = {2,  3,  4,  5,  6,  21, 9,  29, 31, 24, 14, 23,
+                                         27, 28, 10, 11, 30, 13, 15, 16, 25, 26, 12, 22};
 
 uint32_t g_gpio_six_map[KEYSCAN_GPIO_SIX_NUM] = {2, 3, 31, 24, 14};
-
-#if defined (CONFIG_KEYSCAN_SUPPORT_SLEEP)
+uint32_t gpio_map_custom[KEYSCAN_GPIO_NUM] = {2,  3,  4,  5,  6,  11, 12, 0,  13, 14, 15, 16,
+                                              17, 18, 22, 23, 24, 25, 26, 27, 0,  0,  0,  0};
+#if defined(CONFIG_KEYSCAN_SUPPORT_SLEEP)
 static timer_handle_t g_keyscan_timer = NULL;
 
 static void keyscan_timer_irq(uintptr_t data)
@@ -71,7 +79,7 @@ uintptr_t keyscan_m_ctl_porting_base_addr_get(void)
 
 void keyscan_port_register_hal_funcs(void)
 {
-#if defined (CONFIG_KEYSCAN_SUPPORT_SLEEP)
+#if defined(CONFIG_KEYSCAN_SUPPORT_SLEEP)
     uapi_pm_add_sleep_veto(PM_VETO_ID_KEYSCAN);
 #endif
     hal_keyscan_register_funcs(hal_keyscan_v150_funcs_get());
@@ -80,21 +88,21 @@ void keyscan_port_register_hal_funcs(void)
 void keyscan_port_unregister_hal_funcs(void)
 {
     hal_keyscan_unregister_funcs();
-#if defined (CONFIG_KEYSCAN_SUPPORT_SLEEP)
+#if defined(CONFIG_KEYSCAN_SUPPORT_SLEEP)
     uapi_pm_remove_sleep_veto(PM_VETO_ID_KEYSCAN);
 #endif
 }
 
 void keyscan_port_register_irq(uint32_t int_id)
 {
-#if defined (CONFIG_KEYSCAN_SUPPORT_SLEEP)
+#if defined(CONFIG_KEYSCAN_SUPPORT_SLEEP)
     uapi_timer_adapter(TIMER_INDEX_2, TIMER_2_IRQN, irq_prio(TIMER_2_IRQN));
     uapi_timer_create(TIMER_INDEX_2, &g_keyscan_timer);
 #endif
     osal_irq_request(int_id, irq_keyscan_handler, NULL, NULL, NULL);
     osal_irq_set_priority(int_id, irq_prio(int_id));
     osal_irq_enable(int_id);
-#if defined (CONFIG_KEYSCAN_SUPPORT_SLEEP)
+#if defined(CONFIG_KEYSCAN_SUPPORT_SLEEP)
     osal_irq_request(KEY_SCAN_LOW_POWER_IRQN, irq_keyscan_slp_handler, NULL, NULL, NULL);
     osal_irq_set_priority(KEY_SCAN_LOW_POWER_IRQN, irq_prio(KEY_SCAN_LOW_POWER_IRQN));
     osal_irq_enable(KEY_SCAN_LOW_POWER_IRQN);
@@ -105,7 +113,7 @@ void keyscan_port_register_irq(uint32_t int_id)
 void keyscan_port_unregister_irq(uint32_t int_id)
 {
     osal_irq_free(int_id, NULL);
-#if defined (CONFIG_KEYSCAN_SUPPORT_SLEEP)
+#if defined(CONFIG_KEYSCAN_SUPPORT_SLEEP)
     uapi_timer_delete(g_keyscan_timer);
     osal_irq_free(KEY_SCAN_LOW_POWER_IRQN, NULL);
 #endif
@@ -115,18 +123,18 @@ int irq_keyscan_handler(int a, void *tmp)
 {
     unused(a);
     unused(tmp);
-#if defined (CONFIG_KEYSCAN_SUPPORT_SLEEP)
+#if defined(CONFIG_KEYSCAN_SUPPORT_SLEEP)
     uapi_timer_stop(g_keyscan_timer);
 #endif
     hal_keyscan_v150_irq();
     osal_irq_clear(KEY_SCAN_IRQN);
-#if defined (CONFIG_KEYSCAN_SUPPORT_SLEEP)
+#if defined(CONFIG_KEYSCAN_SUPPORT_SLEEP)
     uapi_timer_start(g_keyscan_timer, CONFIG_KEYSCAN_IDLE_WAIT_US, keyscan_timer_irq, 1);
 #endif
     return 0;
 }
 
-#if defined (CONFIG_KEYSCAN_SUPPORT_SLEEP)
+#if defined(CONFIG_KEYSCAN_SUPPORT_SLEEP)
 int irq_keyscan_slp_handler(int a, void *tmp)
 {
     unused(a);
@@ -154,9 +162,7 @@ keyscan_keys_type_t keyscan_porting_get_type_sel(void)
     return g_keyboard_type_sel;
 }
 
-void keyscan_porting_config_pins(void)
-{
-}
+void keyscan_porting_config_pins(void) {}
 
 void keyscan_porting_pin_set(void)
 {
@@ -190,5 +196,48 @@ void keyscan_porting_pin_set(void)
         reg16_setbits(KEYSCAN_SIX_TYPE_ROW0_REG, EVEN_SEL_BIT, BIT_SEL_LEN, g_gpio_six_map[gpio_index++]);
         reg16_setbits(KEYSCAN_SIX_TYPE_ROW0_REG, ODD_SEL_BIT, BIT_SEL_LEN, g_gpio_six_map[gpio_index++]);
         reg16_setbits(KEYSCAN_SIX_TYPE_ROW1_REG, EVEN_SEL_BIT, BIT_SEL_LEN, g_gpio_six_map[gpio_index]);
+    } else if (g_keyboard_type_sel == CUSTOME_KEYS_TYPE) {
+        for (int i = 0; i < KEYSCAN_COL_NUM; i++) {
+            uapi_pin_set_mode(gpio_map_custom[i], HAL_PIO_KEY_SCAN);
+        }
+
+        for (int i = KEYSCAN_MAX_COL; i < KEYSCAN_MAX_KEY_NUM; i++) {
+            uapi_pin_set_mode(gpio_map_custom[i], HAL_PIO_KEY_SCAN);
+        }
+        gpio_index = 0;
+        // 配置列引脚 (COL)
+        for (int i = 0; i < (KEYSCAN_COL_NUM / 2 + 1); i++) {
+            reg16_setbits(KEYSCAN_PIN_SEL_COL_BASE_ADDR + (i * INTERVAL_OF_REGS), EVEN_SEL_BIT, BIT_SEL_LEN,
+                          gpio_map_custom[gpio_index]);
+            gpio_index++;
+            if (gpio_index >= KEYSCAN_MAX_KEY_NUM || gpio_index >= KEYSCAN_COL_NUM) {
+                break; // 如果超出范围，退出循环
+            }
+
+            reg16_setbits(KEYSCAN_PIN_SEL_COL_BASE_ADDR + (i * INTERVAL_OF_REGS), ODD_SEL_BIT, BIT_SEL_LEN,
+                          gpio_map_custom[gpio_index]);
+            gpio_index++;
+            if (gpio_index >= KEYSCAN_MAX_KEY_NUM || gpio_index >= KEYSCAN_COL_NUM) {
+                break; // 如果超出范围，退出循环
+            }
+        }
+
+        gpio_index = KEYSCAN_MAX_COL;
+        // 配置行引脚 (ROW)
+        for (int i = 0; i < (KEYSCAN_ROW_NUM / 2 + 1); i++) {
+            reg16_setbits(KEYSCAN_PIN_SEL_ROW_BASE_ADDR + (i * INTERVAL_OF_REGS), EVEN_SEL_BIT, BIT_SEL_LEN,
+                          gpio_map_custom[gpio_index]);
+            gpio_index++;
+            if (gpio_index >= KEYSCAN_MAX_KEY_NUM) {
+                break; // 如果超出范围，退出循环
+            }
+
+            reg16_setbits(KEYSCAN_PIN_SEL_ROW_BASE_ADDR + (i * INTERVAL_OF_REGS), ODD_SEL_BIT, BIT_SEL_LEN,
+                          gpio_map_custom[gpio_index]);
+            gpio_index++;
+            if (gpio_index >= KEYSCAN_MAX_KEY_NUM) {
+                break; // 如果超出范围，退出循环
+            }
+        }
     }
 }
