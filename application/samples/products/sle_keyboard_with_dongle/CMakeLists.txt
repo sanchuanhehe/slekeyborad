@@ -7,6 +7,7 @@ set(SOURCES_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/sle_keyboard/sle_keyboard.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sle_keyboard/sle_keyboard_server.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sle_keyboard/sle_keyboard_server_adv.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/sle_keyboard/led.c
 )
 elseif(DEFINED CONFIG_SAMPLE_SUPPORT_SLE_KEYBOARD_DONGLE)
 set(SOURCES_LIST
