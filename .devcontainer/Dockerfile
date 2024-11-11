@@ -19,7 +19,8 @@ RUN apt-get update && apt-get upgrade -y && \
     bash \
     ninja-build \
     unzip \
-    doxygen
+    doxygen \
+    clang-format
 
 # 配置shell为bash
 RUN echo "dash dash/sh boolean false" | debconf-set-selections && \
