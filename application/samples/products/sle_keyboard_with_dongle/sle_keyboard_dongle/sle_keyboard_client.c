@@ -154,6 +154,10 @@ void  sle_keyboard_client_sample_pair_complete_cbk(uint16_t conn_id, const sle_a
         info.version = 1;
         ssapc_exchange_info_req(1, g_sle_keyboard_conn_id, &info);
     }
+    else {
+        osal_printk("%s pair complete status error\r\n", SLE_KEYBOARD_DONGLE_LOG);
+        osal_printk("%s pair complete status:%d\r\n", SLE_KEYBOARD_DONGLE_LOG, status);
+    }
 }
 
 static void sle_keyboard_client_sample_connect_cbk_register(void)

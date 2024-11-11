@@ -20,37 +20,37 @@
 #include "sle_keyboard_server.h"
 #include "sle_keyboard_server_adv.h"
 
-#define USB_HID_KEYBOARD_MAX_KEY_LENTH          6
-#define USB_KEYBOARD_REPORTER_LEN               9
-#define KEYSCAN_REPORT_MAX_KEY_NUMS             6
-#define CONVERT_DEC_TO_HEX                      16
-#define MAX_NUM_OF_DEC                          10
-#define LENGTH_OF_KEY_VALUE_STR                 5
-#define USB_HID_SPECIAL_KEY_MIN                 0xE0
-#define USB_HID_SPECIAL_KEY_MAX                 0xE7
-#define SLE_KEYBOARD_PARAM_ARGC_2               2
-#define SLE_KEYBOARD_PARAM_ARGC_3               3
-#define SLE_KEYBOARD_PARAM_ARGC_4               4
+#define USB_HID_KEYBOARD_MAX_KEY_LENTH 6
+#define USB_KEYBOARD_REPORTER_LEN 9
+#define KEYSCAN_REPORT_MAX_KEY_NUMS 6
+#define CONVERT_DEC_TO_HEX 16
+#define MAX_NUM_OF_DEC 10
+#define LENGTH_OF_KEY_VALUE_STR 5
+#define USB_HID_SPECIAL_KEY_MIN 0xE0
+#define USB_HID_SPECIAL_KEY_MAX 0xE7
+#define SLE_KEYBOARD_PARAM_ARGC_2 2
+#define SLE_KEYBOARD_PARAM_ARGC_3 3
+#define SLE_KEYBOARD_PARAM_ARGC_4 4
 
-#define SLE_KEYBOARD_TASK_STACK_SIZE            0x1000
-#define SLE_KEYBOARD_TASK_PRIO                  (osPriority_t)(17)
-#define SLE_KEYBOARD_TASK_DURATION_MS           2000
-#define SLE_KEYBOARD_SERVER_DELAY_COUNT         3
-#define SLE_ADV_HANDLE_DEFAULT                  1
-#define SLE_KEYBOARD_SERVER_MSG_QUEUE_LEN       5
-#define SLE_KEYBOARD_SERVER_MSG_QUEUE_MAX_SIZE  32
-#define SLE_KEYBOARD_SERVER_QUEUE_DELAY         0xFFFFFFFF
-#define SLE_KEYBOARD_SERVER_LOG                 "[sle keyboard server]"
+#define SLE_KEYBOARD_TASK_STACK_SIZE 0x1000
+#define SLE_KEYBOARD_TASK_PRIO (osPriority_t)(17)
+#define SLE_KEYBOARD_TASK_DURATION_MS 2000
+#define SLE_KEYBOARD_SERVER_DELAY_COUNT 3
+#define SLE_ADV_HANDLE_DEFAULT 1
+#define SLE_KEYBOARD_SERVER_MSG_QUEUE_LEN 5
+#define SLE_KEYBOARD_SERVER_MSG_QUEUE_MAX_SIZE 32
+#define SLE_KEYBOARD_SERVER_QUEUE_DELAY 0xFFFFFFFF
+#define SLE_KEYBOARD_SERVER_LOG "[sle keyboard server]"
 
 #if defined(CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE)
-# include "keyboardconfig.h"
+#include "keyboardconfig.h"
 static uint8_t g_key_map[KEYSCAN_MAX_ROW][KEYSCAN_MAX_COL] = KEYSCAN_MAP;
 #else
 #error "Please define CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE"
-static uint8_t g_key_map[KEYSCAN_MAX_ROW][KEYSCAN_MAX_COL]  = {
-    { 0x04, 0x05 },
-    { 0x06, 0x07 },
-    { 0x08, 0x09 },
+static uint8_t g_key_map[KEYSCAN_MAX_ROW][KEYSCAN_MAX_COL] = {
+    {0x04, 0x05},
+    {0x06, 0x07},
+    {0x08, 0x09},
 };
 #endif /* CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE */
 typedef struct usb_hid_keyboard_report {
@@ -63,7 +63,9 @@ typedef struct usb_hid_keyboard_report {
 static usb_hid_keyboard_report_t g_hid_keyboard_report;
 static unsigned long g_sle_keyboard_server_msgqueue_id;
 
-static void ssaps_server_read_request_cbk(uint8_t server_id, uint16_t conn_id, ssaps_req_read_cb_t *read_cb_para,
+static void ssaps_server_read_request_cbk(uint8_t server_id,
+                                          uint16_t conn_id,
+                                          ssaps_req_read_cb_t *read_cb_para,
                                           errcode_t status)
 {
     if (read_cb_para == NULL) {
@@ -73,7 +75,9 @@ static void ssaps_server_read_request_cbk(uint8_t server_id, uint16_t conn_id, s
     osal_printk("%s ssaps read request cbk callback server_id:%x, conn_id:%x, handle:%x, status:%x\r\n",
                 SLE_KEYBOARD_SERVER_LOG, server_id, conn_id, read_cb_para->handle, status);
 }
-static void ssaps_server_write_request_cbk(uint8_t server_id, uint16_t conn_id, ssaps_req_write_cb_t *write_cb_para,
+static void ssaps_server_write_request_cbk(uint8_t server_id,
+                                           uint16_t conn_id,
+                                           ssaps_req_write_cb_t *write_cb_para,
                                            errcode_t status)
 {
     unused(server_id);
@@ -86,8 +90,8 @@ static void ssaps_server_write_request_cbk(uint8_t server_id, uint16_t conn_id, 
         osal_printk("%s ssaps_server_write_request_cbk fail, write_cb_para is null!\r\n", SLE_KEYBOARD_SERVER_LOG);
         return;
     }
-    osal_printk("%s ssaps write request callback cbk handle:%x, status:%x\r\n",
-                SLE_KEYBOARD_SERVER_LOG, write_cb_para->handle, status);
+    osal_printk("%s ssaps write request callback cbk handle:%x, status:%x\r\n", SLE_KEYBOARD_SERVER_LOG,
+                write_cb_para->handle, status);
     if ((write_cb_para->length > 0) && write_cb_para->value) {
         // todo,recv data from client,send to pc by uart or send to keyboard
         osal_printk("%s recv data from client, len =[%d], data= ", SLE_KEYBOARD_SERVER_LOG, write_cb_para->length);
@@ -131,9 +135,9 @@ static void ssaps_server_write_request_cbk(uint8_t server_id, uint16_t conn_id, 
 
 static void sle_keyboard_server_create_msgqueue(void)
 {
-    if (osal_msg_queue_create("sle_keyboard_server_msgqueue", SLE_KEYBOARD_SERVER_MSG_QUEUE_LEN, \
-        (unsigned long *)&g_sle_keyboard_server_msgqueue_id, 0, SLE_KEYBOARD_SERVER_MSG_QUEUE_MAX_SIZE) \
-        != EOK) {
+    if (osal_msg_queue_create("sle_keyboard_server_msgqueue", SLE_KEYBOARD_SERVER_MSG_QUEUE_LEN,
+                              (unsigned long *)&g_sle_keyboard_server_msgqueue_id, 0,
+                              SLE_KEYBOARD_SERVER_MSG_QUEUE_MAX_SIZE) != EOK) {
         osal_printk("^%s sle_keyboard_server_create_msgqueue message queue create failed!\n", SLE_KEYBOARD_SERVER_LOG);
     }
 }
@@ -149,8 +153,7 @@ static void sle_keyboard_server_write_msgqueue(uint8_t *buffer_addr, uint32_t bu
         osal_printk("%s sle_keyboard_server_write_msgqueue fail, buffer_addr is null!\r\n", SLE_KEYBOARD_SERVER_LOG);
         return;
     }
-    osal_msg_queue_write_copy(g_sle_keyboard_server_msgqueue_id, (void *)buffer_addr, \
-                              (uint32_t)buffer_size, 0);
+    osal_msg_queue_write_copy(g_sle_keyboard_server_msgqueue_id, (void *)buffer_addr, (uint32_t)buffer_size, 0);
 }
 
 static int32_t sle_keyboard_server_receive_msgqueue(uint8_t *buffer_addr, uint32_t *buffer_size)
@@ -159,8 +162,8 @@ static int32_t sle_keyboard_server_receive_msgqueue(uint8_t *buffer_addr, uint32
         osal_printk("%s sle_keyboard_server_receive_msgqueue fail, buffer_addr is null!\r\n", SLE_KEYBOARD_SERVER_LOG);
         return -1;
     }
-    return osal_msg_queue_read_copy(g_sle_keyboard_server_msgqueue_id, (void *)buffer_addr, \
-                                    buffer_size, SLE_KEYBOARD_SERVER_QUEUE_DELAY);
+    return osal_msg_queue_read_copy(g_sle_keyboard_server_msgqueue_id, (void *)buffer_addr, buffer_size,
+                                    SLE_KEYBOARD_SERVER_QUEUE_DELAY);
 }
 
 static void sle_keyboard_server_rx_buf_init(uint8_t *buffer_addr, uint32_t buffer_size)
@@ -177,7 +180,10 @@ static void sle_keyboard_server_rx_buf_init(uint8_t *buffer_addr, uint32_t buffe
 static int sle_keyboard_keyscan_callback(int key_nums, uint8_t key_values[])
 {
     uint8_t normal_key_num = 0;
-
+    // osal_printk("%s key_nums = %d, key_values = ", SLE_KEYBOARD_SERVER_LOG, key_nums);
+    // for (uint8_t i = 0; i < key_nums; i++) {
+    //     osal_printk("0x%02x ", key_values[i]);
+    // }
     if (sle_keyboard_client_is_connected() == 0) {
         return 1;
     }
@@ -203,24 +209,25 @@ static void *sle_keyboard_task(const char *arg)
 {
     unused(arg);
     errcode_t ret;
-    uint8_t rx_buf[SLE_KEYBOARD_SERVER_MSG_QUEUE_MAX_SIZE] = { 0 };
+    uint8_t rx_buf[SLE_KEYBOARD_SERVER_MSG_QUEUE_MAX_SIZE] = {0};
     uint32_t rx_length = SLE_KEYBOARD_SERVER_MSG_QUEUE_MAX_SIZE;
     uint8_t sle_connect_state[] = "sle_dis_connect";
 
     osal_printk("enter sle_keyboard_task!\r\n");
     // 1.delay for sle start
     osDelay(SLE_KEYBOARD_TASK_DURATION_MS * SLE_KEYBOARD_SERVER_DELAY_COUNT);
-    // 2.pin config, full key need run it
-    #if defined(CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE)
+// 2.pin config, full key need run it
+#if defined(CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE)
     keyscan_porting_config_pins();
-    #endif
+#endif
     // 3.keyscan init
     uapi_set_keyscan_value_map((uint8_t **)g_key_map, KEYSCAN_MAX_ROW, KEYSCAN_MAX_COL);
-    #if defined(CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE)
-    keyscan_porting_type_sel(FULL_KEYS_TYPE);
-    #else
+#if defined(CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE)
+    keyscan_porting_type_sel(CUSTOME_KEYS_TYPE);
+#else
+#error "Please define CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE"
     keyscan_porting_type_sel(SIX_KEYS_TYPE);
-    #endif
+#endif
     uapi_keyscan_init(EVERY_ROW_PULSE_40_US, HAL_KEYSCAN_MODE_0, KEYSCAN_INT_VALUE_RDY);
     osDelay(SLE_KEYBOARD_TASK_DURATION_MS);
     uapi_keyscan_register_callback(sle_keyboard_keyscan_callback);
@@ -249,7 +256,7 @@ static void *sle_keyboard_task(const char *arg)
 
 static void sle_keyboard_entry(void)
 {
-    osThreadAttr_t attr = { 0 };
+    osThreadAttr_t attr = {0};
 
     attr.name = "SLEKeyboardTask";
     attr.attr_bits = 0U;
