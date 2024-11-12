@@ -156,7 +156,7 @@ void  sle_keyboard_client_sample_pair_complete_cbk(uint16_t conn_id, const sle_a
     }
     else {
         osal_printk("%s pair complete status error\r\n", SLE_KEYBOARD_DONGLE_LOG);
-        osal_printk("%s pair complete status:%d\r\n", SLE_KEYBOARD_DONGLE_LOG, status);
+        osal_printk("%s pair complete status:%x\r\n", SLE_KEYBOARD_DONGLE_LOG, status);
     }
 }
 
