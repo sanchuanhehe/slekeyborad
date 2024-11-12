@@ -17,25 +17,25 @@
 #include "sle_keyboard_server_adv.h"
 
 /* sle device name */
-#define NAME_MAX_LENGTH                           32
+#define NAME_MAX_LENGTH 32
 /* 连接调度间隔12.5ms，单位125us */
-#define SLE_CONN_INTV_MIN_DEFAULT                 0x64
+#define SLE_CONN_INTV_MIN_DEFAULT 0x64
 /* 连接调度间隔12.5ms，单位125us */
-#define SLE_CONN_INTV_MAX_DEFAULT                 0x64
+#define SLE_CONN_INTV_MAX_DEFAULT 0x64
 /* 连接调度间隔25ms，单位125us */
-#define SLE_ADV_INTERVAL_MIN_DEFAULT              0xC8
+#define SLE_ADV_INTERVAL_MIN_DEFAULT 0xC8
 /* 连接调度间隔25ms，单位125us */
-#define SLE_ADV_INTERVAL_MAX_DEFAULT              0xC8
+#define SLE_ADV_INTERVAL_MAX_DEFAULT 0xC8
 /* 超时时间5000ms，单位10ms */
-#define SLE_CONN_SUPERVISION_TIMEOUT_DEFAULT      0x1F4
+#define SLE_CONN_SUPERVISION_TIMEOUT_DEFAULT 0x1F4
 /* 超时时间4990ms，单位10ms */
-#define SLE_CONN_MAX_LATENCY                      0x1F3
+#define SLE_CONN_MAX_LATENCY 0x1F3
 /* 广播发送功率 */
-#define SLE_ADV_TX_POWER                          10
+#define SLE_ADV_TX_POWER 10
 /* 广播ID */
-#define SLE_ADV_HANDLE_DEFAULT                    1
+#define SLE_ADV_HANDLE_DEFAULT 1
 /* 最大广播数据长度 */
-#define SLE_ADV_DATA_LEN_MAX                      251
+#define SLE_ADV_DATA_LEN_MAX 251
 
 /* 广播名称 */
 static uint8_t sle_local_name[] = "sle_keyboard_server";
@@ -119,7 +119,7 @@ static uint16_t sle_set_scan_response_data(uint8_t *scan_rsp_data, uint16_t leng
 static int sle_set_default_announce_param(void)
 {
     sle_announce_param_t param = {0};
-    unsigned char local_addr[SLE_ADDR_LEN] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    unsigned char local_addr[SLE_ADDR_LEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     param.announce_mode = SLE_ANNOUNCE_MODE_CONNECTABLE_SCANABLE;
     param.announce_handle = SLE_ADV_HANDLE_DEFAULT;
     param.announce_gt_role = SLE_ANNOUNCE_ROLE_T_CAN_NEGO;
@@ -187,8 +187,7 @@ static int sle_set_default_announce_data(void)
 
 static void sle_announce_enable_cbk(uint32_t announce_id, errcode_t status)
 {
-    sample_print("%s sle announce enable callback id:%02x, state:%x\r\n", SLE_KEYBOARD_SERVER_LOG, announce_id,
-                 status);
+    sample_print("%s sle announce enable callback id:%02x, state:%x\r\n", SLE_KEYBOARD_SERVER_LOG, announce_id, status);
 }
 
 static void sle_announce_disable_cbk(uint32_t announce_id, errcode_t status)
@@ -217,8 +216,8 @@ errcode_t sle_keyboard_announce_register_cbks(void)
     seek_cbks.sle_enable_cb = sle_enable_cbk;
     ret = sle_announce_seek_register_callbacks(&seek_cbks);
     if (ret != ERRCODE_SLE_SUCCESS) {
-        sample_print("%s sle_keyboard_announce_register_cbks,register_callbacks fail :%x\r\n",
-                     SLE_KEYBOARD_SERVER_LOG, ret);
+        sample_print("%s sle_keyboard_announce_register_cbks,register_callbacks fail :%x\r\n", SLE_KEYBOARD_SERVER_LOG,
+                     ret);
         return ret;
     }
     return ERRCODE_SLE_SUCCESS;
