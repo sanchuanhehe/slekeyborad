@@ -215,7 +215,7 @@ static void *sle_keyboard_task(const char *arg)
 
     osal_printk("enter sle_keyboard_task!\r\n");
     // 1.delay for sle start
-    osDelay(SLE_KEYBOARD_TASK_DURATION_MS * SLE_KEYBOARD_SERVER_DELAY_COUNT);
+    // osDelay(SLE_KEYBOARD_TASK_DURATION_MS * SLE_KEYBOARD_SERVER_DELAY_COUNT);
     // 2.pin config, full key need run it
 #if defined(CONFIG_KEYSCAN_USE_FULL_KEYS_TYPE)
     keyscan_porting_config_pins();

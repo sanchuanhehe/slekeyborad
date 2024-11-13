@@ -19,18 +19,18 @@
 #include "sle_keyboard_server_adv.h"
 #include "sle_keyboard_server.h"
 
-#define OCTET_BIT_LEN                   8
-#define UUID_LEN_2                      2
-#define UUID_INDEX                      14
-#define BT_INDEX_4                      4
-#define BT_INDEX_0                      0
-#define UUID_16BIT_LEN                  2
-#define UUID_128BIT_LEN                 16
+#define OCTET_BIT_LEN 8
+#define UUID_LEN_2 2
+#define UUID_INDEX 14
+#define BT_INDEX_4 4
+#define BT_INDEX_0 0
+#define UUID_16BIT_LEN 2
+#define UUID_128BIT_LEN 16
 
 /* sle server app uuid */
-static uint8_t g_sle_uuid_app_uuid[UUID_LEN_2] = { 0x12, 0x34 };
+static uint8_t g_sle_uuid_app_uuid[UUID_LEN_2] = {0x12, 0x34};
 /* server notify property uuid */
-static uint8_t g_sle_property_value[OCTET_BIT_LEN] = { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 };
+static uint8_t g_sle_property_value[OCTET_BIT_LEN] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
 /* sle connect acb handle */
 static uint16_t g_sle_conn_handle = 0;
 /* sle server handle */
@@ -43,8 +43,8 @@ static uint16_t g_property_handle = 0;
 static uint16_t g_sle_pair_handle;
 
 static sle_keyboard_server_msg_queue g_sle_keyboard_server_msg_queue = NULL;
-static uint8_t g_sle_keyboard_base[] = { 0x37, 0xBE, 0xA8, 0x80, 0xFC, 0x70, 0x11, 0xEA, \
-    0xB7, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t g_sle_keyboard_base[] = {0x37, 0xBE, 0xA8, 0x80, 0xFC, 0x70, 0x11, 0xEA,
+                                        0xB7, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 static void encode2byte_little(uint8_t *_ptr, uint16_t data)
 {
@@ -57,7 +57,7 @@ static void sle_uuid_set_base(sle_uuid_t *out)
     if (memcpy_s(out->uuid, SLE_UUID_LEN, g_sle_keyboard_base, SLE_UUID_LEN) != EOK) {
         sample_print("%s sle_uuid_set_base memcpy fail\n", SLE_KEYBOARD_SERVER_LOG);
         out->len = 0;
-        return ;
+        return;
     }
     out->len = UUID_LEN_2;
 }
@@ -69,13 +69,12 @@ static void sle_uuid_setu2(uint16_t u2, sle_uuid_t *out)
     encode2byte_little(&out->uuid[UUID_INDEX], u2);
 }
 
-static void ssaps_mtu_changed_cbk(uint8_t server_id, uint16_t conn_id,  ssap_exchange_info_t *mtu_size,
-                                  errcode_t status)
+static void ssaps_mtu_changed_cbk(uint8_t server_id, uint16_t conn_id, ssap_exchange_info_t *mtu_size, errcode_t status)
 {
     sample_print("%s ssaps ssaps_mtu_changed_cbk callback server_id:%x, conn_id:%x, mtu_size:%x, status:%x\r\n",
                  SLE_KEYBOARD_SERVER_LOG, server_id, conn_id, mtu_size->mtu_size, status);
     if (g_sle_pair_handle == 0) {
-        g_sle_pair_handle =  1;
+        g_sle_pair_handle = 1;
     }
 }
 
@@ -90,24 +89,32 @@ static void ssaps_add_service_cbk(uint8_t server_id, sle_uuid_t *uuid, uint16_t 
     sample_print("%s add service cbk callback server_id:%x, handle:%x, status:%x\r\n", SLE_KEYBOARD_SERVER_LOG,
                  server_id, handle, status);
 }
-static void ssaps_add_property_cbk(uint8_t server_id, sle_uuid_t *uuid, uint16_t service_handle,
-    uint16_t handle, errcode_t status)
+static void ssaps_add_property_cbk(uint8_t server_id,
+                                   sle_uuid_t *uuid,
+                                   uint16_t service_handle,
+                                   uint16_t handle,
+                                   errcode_t status)
 {
     unused(uuid);
     sample_print("%s add property cbk callback server_id:%x, service_handle:%x,handle:%x, status:%x\r\n",
                  SLE_KEYBOARD_SERVER_LOG, server_id, service_handle, handle, status);
 }
-static void ssaps_add_descriptor_cbk(uint8_t server_id, sle_uuid_t *uuid, uint16_t service_handle,
-                                     uint16_t property_handle, errcode_t status)
+static void ssaps_add_descriptor_cbk(uint8_t server_id,
+                                     sle_uuid_t *uuid,
+                                     uint16_t service_handle,
+                                     uint16_t property_handle,
+                                     errcode_t status)
 {
     unused(uuid);
-    sample_print("%s add descriptor cbk callback server_id:%x, service_handle:%x, property_handle:%x, \
-                 status:%x\r\n", SLE_KEYBOARD_SERVER_LOG, server_id, service_handle, property_handle, status);
+    sample_print(
+        "%s add descriptor cbk callback server_id:%x, service_handle:%x, property_handle:%x, \
+                 status:%x\r\n",
+        SLE_KEYBOARD_SERVER_LOG, server_id, service_handle, property_handle, status);
 }
 static void ssaps_delete_all_service_cbk(uint8_t server_id, errcode_t status)
 {
-    sample_print("%s delete all service callback server_id:%x, status:%x\r\n", SLE_KEYBOARD_SERVER_LOG,
-                 server_id, status);
+    sample_print("%s delete all service callback server_id:%x, status:%x\r\n", SLE_KEYBOARD_SERVER_LOG, server_id,
+                 status);
 }
 static errcode_t sle_ssaps_register_cbks(ssaps_read_request_callback ssaps_read_callback,
                                          ssaps_write_request_callback ssaps_write_callback)
@@ -124,8 +131,7 @@ static errcode_t sle_ssaps_register_cbks(ssaps_read_request_callback ssaps_read_
     ssaps_cbk.write_request_cb = ssaps_write_callback;
     ret = ssaps_register_callbacks(&ssaps_cbk);
     if (ret != ERRCODE_SLE_SUCCESS) {
-        sample_print("%s sle_ssaps_register_cbks,ssaps_register_callbacks fail :%x\r\n", SLE_KEYBOARD_SERVER_LOG,
-                     ret);
+        sample_print("%s sle_ssaps_register_cbks,ssaps_register_callbacks fail :%x\r\n", SLE_KEYBOARD_SERVER_LOG, ret);
         return ret;
     }
     return ERRCODE_SLE_SUCCESS;
@@ -149,7 +155,7 @@ static errcode_t sle_uuid_server_property_add(void)
     errcode_t ret;
     ssaps_property_info_t property = {0};
     ssaps_desc_info_t descriptor = {0};
-    uint8_t ntf_value[] = { 0x01, 0x02 };
+    uint8_t ntf_value[] = {0x01, 0x02};
 
     property.permissions = SLE_UUID_TEST_PROPERTIES;
     property.operate_indication = SLE_UUID_TEST_OPERATION_INDICATION;
@@ -158,12 +164,12 @@ static errcode_t sle_uuid_server_property_add(void)
     if (property.value == NULL) {
         return ERRCODE_SLE_FAIL;
     }
-    if (memcpy_s(property.value, sizeof(g_sle_property_value), g_sle_property_value,
-        sizeof(g_sle_property_value)) != EOK) {
+    if (memcpy_s(property.value, sizeof(g_sle_property_value), g_sle_property_value, sizeof(g_sle_property_value)) !=
+        EOK) {
         osal_vfree(property.value);
         return ERRCODE_SLE_FAIL;
     }
-    ret = ssaps_add_property_sync(g_server_id, g_service_handle, &property,  &g_property_handle);
+    ret = ssaps_add_property_sync(g_server_id, g_service_handle, &property, &g_property_handle);
     if (ret != ERRCODE_SLE_SUCCESS) {
         sample_print("%s sle keyboard add property fail, ret:%x\r\n", SLE_KEYBOARD_SERVER_LOG, ret);
         osal_vfree(property.value);
@@ -284,12 +290,17 @@ errcode_t sle_keyboard_server_send_report_by_handle(const uint8_t *data, uint8_t
     return ERRCODE_SLE_SUCCESS;
 }
 
-static void sle_connect_state_changed_cbk(uint16_t conn_id, const sle_addr_t *addr, sle_acb_state_t conn_state,
-                                          sle_pair_state_t pair_state, sle_disc_reason_t disc_reason)
+static void sle_connect_state_changed_cbk(uint16_t conn_id,
+                                          const sle_addr_t *addr,
+                                          sle_acb_state_t conn_state,
+                                          sle_pair_state_t pair_state,
+                                          sle_disc_reason_t disc_reason)
 {
     uint8_t sle_connect_state[] = "sle_dis_connect";
-    sample_print("%s connect state changed callback conn_id:0x%02x, conn_state:0x%x, pair_state:0x%x, \
-                 disc_reason:0x%x\r\n", SLE_KEYBOARD_SERVER_LOG,conn_id, conn_state, pair_state, disc_reason);
+    sample_print(
+        "%s connect state changed callback conn_id:0x%02x, conn_state:0x%x, pair_state:0x%x, \
+                 disc_reason:0x%x\r\n",
+        SLE_KEYBOARD_SERVER_LOG, conn_id, conn_state, pair_state, disc_reason);
     sample_print("%s connect state changed callback addr:%02x:**:**:**:%02x:%02x\r\n", SLE_KEYBOARD_SERVER_LOG,
                  addr->addr[BT_INDEX_0], addr->addr[BT_INDEX_4]);
     if (conn_state == SLE_ACB_STATE_CONNECTED) {
@@ -305,10 +316,9 @@ static void sle_connect_state_changed_cbk(uint16_t conn_id, const sle_addr_t *ad
 
 static void sle_pair_complete_cbk(uint16_t conn_id, const sle_addr_t *addr, errcode_t status)
 {
-    sample_print("%s pair complete conn_id:%02x, status:%x\r\n", SLE_KEYBOARD_SERVER_LOG,
-                 conn_id, status);
-    sample_print("%s pair complete addr:%02x:**:**:**:%02x:%02x\r\n", SLE_KEYBOARD_SERVER_LOG,
-                 addr->addr[BT_INDEX_0], addr->addr[BT_INDEX_4]);
+    sample_print("%s pair complete conn_id:%02x, status:%x\r\n", SLE_KEYBOARD_SERVER_LOG, conn_id, status);
+    sample_print("%s pair complete addr:%02x:**:**:**:%02x:%02x\r\n", SLE_KEYBOARD_SERVER_LOG, addr->addr[BT_INDEX_0],
+                 addr->addr[BT_INDEX_4]);
     g_sle_pair_handle = 1;
 }
 
@@ -366,8 +376,8 @@ errcode_t sle_keyboard_server_init(ssaps_read_request_callback ssaps_read_callba
     }
     ret = sle_keyboard_server_adv_init();
     if (ret != ERRCODE_SLE_SUCCESS) {
-        sample_print("%s sle_keyboard_server_init,sle_keyboard_server_adv_init fail :%x\r\n",
-                     SLE_KEYBOARD_SERVER_LOG, ret);
+        sample_print("%s sle_keyboard_server_init,sle_keyboard_server_adv_init fail :%x\r\n", SLE_KEYBOARD_SERVER_LOG,
+                     ret);
         return ret;
     }
     sample_print("%s init ok\r\n", SLE_KEYBOARD_SERVER_LOG);

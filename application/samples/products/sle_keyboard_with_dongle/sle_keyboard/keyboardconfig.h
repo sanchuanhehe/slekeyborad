@@ -139,6 +139,6 @@
         }                                                                                                              \
     }
 
-void *keyscan_task(const char *arg);
+// void *keyscan_task(const char *arg);
 
 #endif /* _KEYSCAN_TASK_H_ */
